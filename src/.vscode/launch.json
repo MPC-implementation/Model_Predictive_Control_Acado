@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "g++ - Build and debug active file",
+            "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "program": "${workspaceFolder}/a.out",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -21,9 +21,10 @@
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }
-            ],
-            "preLaunchTask": "g++ build active file",
-            "miDebuggerPath": "/usr/bin/gdb"
+            ]
+        
+    
         }
+
     ]
 }

@@ -209,28 +209,22 @@ int main()
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           ///////////////////////////////////////////////////////////////////////////
           // logging msg
-          std::vector<double> steering;
-          auto jsonSteering = json::array();
-          steering.push_back(steer_value / deg2rad(25) * -1.0);
 
+          json steering = {steer_value / deg2rad(25) * -1.0};
           if (flgInit == false)
           {
-            
-
             flgInit = true;
-            jsonSteering.push_back(steering);
             //remove file and create logging
             std::ofstream fileO("../logging/LoggingSteering.json");
-            fileO << jsonSteering;
+            fileO << steering;
           }
           else
           {
             std::ifstream fileI("../logging/LoggingSteering.json");
             json jf = json::parse(fileI);
-            jsonSteering.push_back(jf);
-            jsonSteering.push_back(steering);
+            jf.insert(jf.end(), steering.begin(), steering.end());
             std::ofstream fileO("../logging/LoggingSteering.json");
-            fileO << jsonSteering;
+            fileO << jf;
           }
 
           std::cout << msg << std::endl;
