@@ -1,0 +1,4 @@
+term2_sim_linux/** filter=lfs diff=lfs merge=lfs -text
+Ipopt-3.12.7/** filter=lfs diff=lfs merge=lfs -text
+logging/** filter=lfs diff=lfs merge=lfs -text
+term2_sim_linux/term2_sim_Data/** filter=lfs diff=lfs merge=lfs -text
