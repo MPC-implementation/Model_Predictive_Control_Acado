@@ -5,6 +5,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
   "/home/khyeon/workspace/024_VehDynamics/src/MPC.cpp" "/home/khyeon/workspace/024_VehDynamics/build/CMakeFiles/mpc.dir/src/MPC.cpp.o"
+  "/home/khyeon/workspace/024_VehDynamics/src/logging.cpp" "/home/khyeon/workspace/024_VehDynamics/build/CMakeFiles/mpc.dir/src/logging.cpp.o"
   "/home/khyeon/workspace/024_VehDynamics/src/main.cpp" "/home/khyeon/workspace/024_VehDynamics/build/CMakeFiles/mpc.dir/src/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")

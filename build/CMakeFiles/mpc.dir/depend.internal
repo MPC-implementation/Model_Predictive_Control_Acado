@@ -143,6 +143,10 @@ CMakeFiles/mpc.dir/src/MPC.cpp.o
  /home/khyeon/workspace/024_VehDynamics/src/Eigen-3.3/Eigen/src/plugins/MatrixCwiseUnaryOps.h
  /home/khyeon/workspace/024_VehDynamics/src/MPC.cpp
  /home/khyeon/workspace/024_VehDynamics/src/MPC.h
+CMakeFiles/mpc.dir/src/logging.cpp.o
+ /home/khyeon/workspace/024_VehDynamics/src/json.hpp
+ /home/khyeon/workspace/024_VehDynamics/src/logging.cpp
+ /home/khyeon/workspace/024_VehDynamics/src/logging.h
 CMakeFiles/mpc.dir/src/main.cpp.o
  /home/khyeon/workspace/024_VehDynamics/src/Eigen-3.3/Eigen/Cholesky
  /home/khyeon/workspace/024_VehDynamics/src/Eigen-3.3/Eigen/Core
@@ -304,4 +308,5 @@ CMakeFiles/mpc.dir/src/main.cpp.o
  /home/khyeon/workspace/024_VehDynamics/src/Eigen-3.3/Eigen/src/plugins/MatrixCwiseUnaryOps.h
  /home/khyeon/workspace/024_VehDynamics/src/MPC.h
  /home/khyeon/workspace/024_VehDynamics/src/json.hpp
+ /home/khyeon/workspace/024_VehDynamics/src/logging.h
  /home/khyeon/workspace/024_VehDynamics/src/main.cpp

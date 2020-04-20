@@ -150,6 +150,33 @@ src/MPC.cpp.s:
 	$(MAKE) -f CMakeFiles/mpc.dir/build.make CMakeFiles/mpc.dir/src/MPC.cpp.s
 .PHONY : src/MPC.cpp.s
 
+src/logging.o: src/logging.cpp.o
+
+.PHONY : src/logging.o
+
+# target to build an object file
+src/logging.cpp.o:
+	$(MAKE) -f CMakeFiles/mpc.dir/build.make CMakeFiles/mpc.dir/src/logging.cpp.o
+.PHONY : src/logging.cpp.o
+
+src/logging.i: src/logging.cpp.i
+
+.PHONY : src/logging.i
+
+# target to preprocess a source file
+src/logging.cpp.i:
+	$(MAKE) -f CMakeFiles/mpc.dir/build.make CMakeFiles/mpc.dir/src/logging.cpp.i
+.PHONY : src/logging.cpp.i
+
+src/logging.s: src/logging.cpp.s
+
+.PHONY : src/logging.s
+
+# target to generate assembly for a file
+src/logging.cpp.s:
+	$(MAKE) -f CMakeFiles/mpc.dir/build.make CMakeFiles/mpc.dir/src/logging.cpp.s
+.PHONY : src/logging.cpp.s
+
 src/main.o: src/main.cpp.o
 
 .PHONY : src/main.o
@@ -189,6 +216,9 @@ help:
 	@echo "... src/MPC.o"
 	@echo "... src/MPC.i"
 	@echo "... src/MPC.s"
+	@echo "... src/logging.o"
+	@echo "... src/logging.i"
+	@echo "... src/logging.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

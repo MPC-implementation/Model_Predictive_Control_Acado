@@ -143,6 +143,10 @@ CMakeFiles/mpc.dir/src/MPC.cpp.o: ../src/Eigen-3.3/Eigen/src/plugins/MatrixCwise
 CMakeFiles/mpc.dir/src/MPC.cpp.o: ../src/MPC.cpp
 CMakeFiles/mpc.dir/src/MPC.cpp.o: ../src/MPC.h
 
+CMakeFiles/mpc.dir/src/logging.cpp.o: ../src/json.hpp
+CMakeFiles/mpc.dir/src/logging.cpp.o: ../src/logging.cpp
+CMakeFiles/mpc.dir/src/logging.cpp.o: ../src/logging.h
+
 CMakeFiles/mpc.dir/src/main.cpp.o: ../src/Eigen-3.3/Eigen/Cholesky
 CMakeFiles/mpc.dir/src/main.cpp.o: ../src/Eigen-3.3/Eigen/Core
 CMakeFiles/mpc.dir/src/main.cpp.o: ../src/Eigen-3.3/Eigen/Householder
@@ -303,5 +307,6 @@ CMakeFiles/mpc.dir/src/main.cpp.o: ../src/Eigen-3.3/Eigen/src/plugins/MatrixCwis
 CMakeFiles/mpc.dir/src/main.cpp.o: ../src/Eigen-3.3/Eigen/src/plugins/MatrixCwiseUnaryOps.h
 CMakeFiles/mpc.dir/src/main.cpp.o: ../src/MPC.h
 CMakeFiles/mpc.dir/src/main.cpp.o: ../src/json.hpp
+CMakeFiles/mpc.dir/src/main.cpp.o: ../src/logging.h
 CMakeFiles/mpc.dir/src/main.cpp.o: ../src/main.cpp
 

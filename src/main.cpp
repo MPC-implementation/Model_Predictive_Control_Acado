@@ -10,6 +10,7 @@
 #include "json.hpp"
 #include <cstdio>
 #include <fstream>
+#include "logging.h"
 // for convenience
 using json = nlohmann::json;
 
@@ -86,13 +87,16 @@ int main()
 
   // MPC is initialized here!
   MPC mpc;
+  Log logSteering( "../logging/LoggingSteering.json");
+  
 
-  h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&mpc, &logSteering](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
 
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+    
     string sdata = string(data).substr(0, length);
     cout << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2')
@@ -209,24 +213,8 @@ int main()
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           ///////////////////////////////////////////////////////////////////////////
           // logging msg
-
-          json steering = {steer_value / deg2rad(25) * -1.0};
-          if (flgInit == false)
-          {
-            flgInit = true;
-            //remove file and create logging
-            std::ofstream fileO("../logging/LoggingSteering.json");
-            fileO << steering;
-          }
-          else
-          {
-            std::ifstream fileI("../logging/LoggingSteering.json");
-            json jf = json::parse(fileI);
-            jf.insert(jf.end(), steering.begin(), steering.end());
-            std::ofstream fileO("../logging/LoggingSteering.json");
-            fileO << jf;
-          }
-
+          float steering = {steer_value / deg2rad(25) * -1.0};
+          logSteering.StartLogging(steering);
           std::cout << msg << std::endl;
           ///////////////////////////////////////////////////////////////////////////
 
