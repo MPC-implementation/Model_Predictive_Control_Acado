@@ -29,9 +29,9 @@ Udacity simulator is made by unity. To run the simulator, Unity is necessary.
 ### Running the project
 On terminal
 ```
-1. Make a build directory: mkdir build && cd build
-2. Compile: cmake .. && make
-3. Run it: ./mpc
+mkdir build && cd build
+cmake .. && make
+./mpc
 ```
 Open the simulator
 ```
