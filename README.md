@@ -1,12 +1,12 @@
-# Vehicle-Dynamics-and-Control
-Vehicle dynamics and control project for autonomous driving. It uses c++ and udacity vehicle simulator. All the meterials such as basic code are from [self driving car engineer course](https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013) git-hub. I just used the environment to study MPC controller for lateral control.
+# Model predictive control
+Model predictive control project for longitudinal and lateral control of the autonomous vehicles. It uses udacity vehicle simulator. [self driving car engineer course](https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013) 
 - - -
 ### Getting started
 These instructions will help running this project on your local machine.
 
 #### Prerequisites
 ##### 1. Basic environment
-Please install all the dependencies first by using this  [repository](https://github.com/udacity/CarND-MPC-Project) which is for self-driving car engineer course of udacity. 
+Please install all the dependencies first by using this  [repository](https://github.com/udacity/CarND-MPC-Project) which is for self-driving car engineer course of udacity.
 ```
 cmake >= 3.5
 -std=c++11
@@ -46,4 +46,4 @@ Open the simulator
 ![](media/ProjectResult.gif)
 - - -
 ### Additional features
-To analyze the performance of the controller more precisely, I added the logging class for data logging. If you want to log any signals from the simulation, you can log the data as .json format. For example, logSteering class instance shows how to log the signal as .json (You can find it main.cpp).
+To analyze the performance of the controller more precisely, I added the logging class for data logging. If logging signal is needed, it can be logged by .json format. For example, logSteering class instance shows how to log the signal as .json (You can find it main.cpp).

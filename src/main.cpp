@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <fstream>
 #include "logging.h"
+#include "acado.h"
 // for convenience
 using json = nlohmann::json;
 
@@ -87,8 +88,7 @@ int main()
 
   // MPC is initialized here!
   MPC mpc;
-  Log logSteering( "../logging/LoggingSteering.json");
-  
+  Log logSteering("../logging/LoggingSteering.json");
 
   h.onMessage([&mpc, &logSteering](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
@@ -96,7 +96,7 @@ int main()
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
-    
+
     string sdata = string(data).substr(0, length);
     cout << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2')
@@ -153,15 +153,6 @@ int main()
 
           cte = coeffs[0];
           epsi = -atan(coeffs[1]);
-          // if (flgInit == false)
-          // {
-          //   freopen( "output.txt", "w", stdout );
-          //   flgInit = true;
-
-          // }
-          // freopen( "output.txt", "w", stdout );
-          // cout << cte << endl;
-          // fclose(stdout);
 
           Eigen::VectorXd state(6);
           state << 0, 0, 0, v, cte, epsi;
@@ -192,6 +183,7 @@ int main()
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
+          // run_mpc_acado();
 
           // Display the waypoints/reference line
           vector<double> next_x_vals;

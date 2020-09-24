@@ -10,8 +10,6 @@ class Log
   Log( string path);
   void StartLogging(float sig);
   
-
-
   private:
   float signal;
   string path;
