@@ -89,6 +89,7 @@ int main()
   // MPC is initialized here!
   MPC mpc;
   Log logSteering("../logging/LoggingSteering.json");
+  init_acado();
 
   h.onMessage([&mpc, &logSteering](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
@@ -161,6 +162,14 @@ int main()
           steer_value = vars[0];
           throttle_value = vars[1];
 
+          // acado library setting
+          vector<double> states = {0, 0, 0, v}; // because current pos is in local coordinate, x = y = psi = 0
+          double ref_x = xvals[5];
+          double ref_y = yvals[5];
+          double ref_psi = atan(coeffs[1] + 2 * coeffs[2] * ref_x + 3 * coeffs[3] * pow(ref_x, 2));
+          double ref_v = 40;
+          vector<double> ref_states = {ref_x, ref_y, ref_psi, ref_v};
+          run_mpc_acado(states, ref_states);
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
@@ -183,7 +192,6 @@ int main()
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
-          // run_mpc_acado();
 
           // Display the waypoints/reference line
           vector<double> next_x_vals;
@@ -207,7 +215,7 @@ int main()
           // logging msg
           float steering = {steer_value / deg2rad(25) * -1.0};
           logSteering.StartLogging(steering);
-          std::cout << msg << std::endl;
+          // std::cout << msg << std::endl;
           ///////////////////////////////////////////////////////////////////////////
 
           // Latency
