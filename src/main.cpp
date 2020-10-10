@@ -139,8 +139,7 @@ int main()
             local_pnt = translation * pnt;
             xvals[i] = local_pnt[0];
             yvals[i] = local_pnt[1];
-            // std::cout << "pnt: " << pnt[0]       <<", "<< pnt[1]       << std::endl;
-            // std::cout << "lcl: " << local_pnt[0] <<", "<< local_pnt[1] << std::endl;
+            // std::cout <<"i: "<< i<< "lcl: " << local_pnt[0] <<", "<< local_pnt[1] << std::endl;
           }
 
           // add the 3rd order polynomial to the coeffecients
@@ -167,13 +166,14 @@ int main()
           double ref_x = xvals[5];
           double ref_y = yvals[5];
           double ref_psi = atan(coeffs[1] + 2 * coeffs[2] * ref_x + 3 * coeffs[3] * pow(ref_x, 2));
-          double ref_v = 40;
-          vector<double> ref_states = {ref_x, ref_y, ref_psi, ref_v};
+          double ref_v = 5; // m/s
+          vector<vector<double>> ref_states = calculate_ref_states(coeffs, ref_v);
           run_mpc_acado(states, ref_states);
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
           //msgJson["steering_angle"] = steer_value / steer_normalizer * -1.0;
+          printf("steer value: %lf,   normalized value: %lf \n", steer_value, steer_value / deg2rad(25) * -1.0);
           msgJson["steering_angle"] = steer_value / deg2rad(25) * -1.0;
           msgJson["throttle"] = throttle_value;
 
