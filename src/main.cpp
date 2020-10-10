@@ -17,13 +17,13 @@ using json = nlohmann::json;
 
 // global variable
 
-static bool flgInit = false;
+bool flg_init = false;
 
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
-
+#define MPH2MS 0.44704
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
@@ -85,13 +85,11 @@ int main()
 {
   using namespace std;
   uWS::Hub h;
-
+  vector<vector<double>> control_output;
   // MPC is initialized here!
   MPC mpc;
   Log logSteering("../logging/LoggingSteering.json");
-  init_acado();
-
-  h.onMessage([&mpc, &logSteering](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&mpc, &control_output, &logSteering](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
 
     // "42" at the start of the message means there's a websocket message event.
@@ -161,19 +159,31 @@ int main()
           steer_value = vars[0];
           throttle_value = vars[1];
 
-          // acado library setting
-          vector<double> states = {0, 0, 0, v}; // because current pos is in local coordinate, x = y = psi = 0
-          double ref_x = xvals[5];
-          double ref_y = yvals[5];
-          double ref_psi = atan(coeffs[1] + 2 * coeffs[2] * ref_x + 3 * coeffs[3] * pow(ref_x, 2));
+          // acado setting
+          vector<double> cur_state = {0, 0, v * MPH2MS, 0}; // because current pos is in local coordinate, x = y = psi = 0
+          
           double ref_v = 5; // m/s
+          if (flg_init == false)
+          {
+            printf("-------  initialized the acado ------- \n");
+            control_output = init_acado();
+            flg_init = true;
+          }
+          printf("-------  previous_control_output ------- \n");
+          for (int i = 0; i < control_output[0].size(); i++)
+          {
+            std::cout<< i <<" acceleration: "<< control_output[0][i] <<" steering: " <<control_output[1][i] <<endl;
+
+          }
+          vector<vector<double>> predicted_states = motion_prediction(cur_state, control_output);
           vector<vector<double>> ref_states = calculate_ref_states(coeffs, ref_v);
-          run_mpc_acado(states, ref_states);
+          control_output = run_mpc_acado(predicted_states, ref_states, control_output);
+
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
           //msgJson["steering_angle"] = steer_value / steer_normalizer * -1.0;
-          printf("steer value: %lf,   normalized value: %lf \n", steer_value, steer_value / deg2rad(25) * -1.0);
+          // printf("steer value: %lf,   normalized value: %lf \n", steer_value, steer_value / deg2rad(25) * -1.0);
           msgJson["steering_angle"] = steer_value / deg2rad(25) * -1.0;
           msgJson["throttle"] = throttle_value;
 

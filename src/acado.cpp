@@ -35,7 +35,7 @@ ACADOvariables acadoVariables;
 ACADOworkspace acadoWorkspace;
 using namespace std;
 /* A template for testing of the solver. */
-void init_acado()
+vector<vector<double>> init_acado()
 {
 	/* Initialize the solver. */
 	acado_initializeSolver();
@@ -52,32 +52,73 @@ void init_acado()
 	// 	acadoVariables.y[i] = 0.0;
 	// for (i = 0; i < NYN; ++i)
 	// 	acadoVariables.yN[i] = 0.0;
+	acado_preparationStep();
+	vector<double> control_output_acceleration;
+	vector<double> control_output_steering;
+	for (int i = 0; i < ACADO_N; ++i)
+	{
+		for (int j = 0; j < ACADO_NU; ++j)
+		{
+			if (j == 0)
+			{
+				control_output_acceleration.push_back(acadoVariables.u[i * ACADO_NU + j]);
+			}
+			else // only two output. therefore i == 1 means steering command output
+			{
+				control_output_steering.push_back(acadoVariables.u[i * ACADO_NU + j]);
+			}
+		}
+	}
+	return {control_output_acceleration, control_output_steering};
 }
-void run_mpc_acado(std::vector<double> states, std::vector<vector<double>> ref_states)
+vector<vector<double>> run_mpc_acado(vector<vector<double>> states, vector<vector<double>> ref_states, vector<vector<double>> previous_u)
 {
 	/* Some temporary variables. */
 	int i, iter;
 	acado_timer t;
 
 	//previou
-	acado_shiftStates(2, 0, 0);
-	acado_shiftControls(0);
-	for (i = 0; i < NX * (N + 1); ++i)
+	// acado_shiftStates(2, 0, 0);
+	// acado_shiftControls(0);
+
+	int x_cnt = 0;
+	for (int i = 0; i < ACADO_N + 1; ++i)
 	{
-		acadoVariables.x[i] = 0.0;
+		for (int j = 0; j < ACADO_NX; ++j)
+		{
+			acadoVariables.x[x_cnt] = states[j][i];
+		}
 	}
 	for (i = 0; i < NX; ++i)
 	{
-		acadoVariables.x0[i] = states[i];
+		acadoVariables.x0[i] = states[i][0];
 	}
-	for (i = 0; i < NU; ++i)
-		acadoVariables.u[i] = 0; // previous u
+	int u_cnt = 0;
+	for (int i = 0; i < ACADO_N; ++i)
+	{
+		for (int j = 0; j < ACADO_NU; ++j)
+		{
+			acadoVariables.u[u_cnt] = previous_u[j][i];
+			u_cnt++;
+		}
+	}
 
 	/* Initialize the measurements/reference. */
-	for (i = 0; i < NY * N; ++i) // N = Horizon, NY = Reference states
-		acadoVariables.y[i] = 0.0;
+	int y_cnt = 0;
+	for (int i = 0; i < ACADO_N; ++i)
+	{
+		for (int j = 0; j < NY; ++j)
+		{
+			acadoVariables.y[y_cnt] = ref_states[j][i]; 
+			y_cnt++;
+		}
+	}
+
 	for (i = 0; i < NYN; ++i)
-		acadoVariables.yN[i] = 0.0;
+	{
+		acadoVariables.yN[i] = ref_states[i][NYN-1];
+	}
+		
 
 	/* MPC: initialize the current state feedback. */
 	// #if ACADO_INITIAL_STATE_FIXED
@@ -88,8 +129,8 @@ void run_mpc_acado(std::vector<double> states, std::vector<vector<double>> ref_s
 	if (VERBOSE)
 		acado_printHeader();
 
-	/* Prepare first step */
-	acado_preparationStep();
+	// /* Prepare first step */
+	// acado_preparationStep();
 
 	/* Get the time before start of the loop. */
 	acado_tic(&t);
@@ -98,6 +139,7 @@ void run_mpc_acado(std::vector<double> states, std::vector<vector<double>> ref_s
 
 	/* Perform the feedback step. */
 	acado_feedbackStep();
+	acado_preparationStep();
 
 	/* Apply the new control immediately to the process, first NU components. */
 
@@ -119,8 +161,26 @@ void run_mpc_acado(std::vector<double> states, std::vector<vector<double>> ref_s
 	if (!VERBOSE)
 		printf("\n\n Average time of one real-time iteration:   %.3g microseconds\n\n", 1e6 * te / NUM_STEPS);
 
-	// acado_printDifferentialVariables();
-	// acado_printControlVariables();
+	acado_printDifferentialVariables();
+	acado_printControlVariables();
+
+	vector<double> control_output_acceleration;
+	vector<double> control_output_steering;
+	for (int i = 0; i < ACADO_N; ++i)
+	{
+		for (int j = 0; j < ACADO_NU; ++j)
+		{
+			if (j == 0)
+			{
+				control_output_acceleration.push_back(acadoVariables.u[i * ACADO_NU + j]);
+			}
+			else // only two output. therefore i == 1 means steering command output
+			{
+				control_output_steering.push_back(acadoVariables.u[i * ACADO_NU + j]);
+			}
+		}
+	}
+	return {control_output_acceleration, control_output_steering};
 }
 
 vector<vector<double>> calculate_ref_states(const Eigen::VectorXd &coeff, const double &reference_v)
@@ -137,7 +197,7 @@ vector<vector<double>> calculate_ref_states(const Eigen::VectorXd &coeff, const 
 	ref_yaw.push_back(yaw0);
 	ref_v.push_back(reference_v);
 	double d = reference_v * Ts;
-	for (int i = 0; i < N-1; i++)
+	for (int i = 0; i < N - 1; i++)
 	{
 		// current states
 		double cur_x = ref_x[i];
@@ -151,9 +211,59 @@ vector<vector<double>> calculate_ref_states(const Eigen::VectorXd &coeff, const 
 		ref_yaw.push_back(next_yaw);
 		ref_v.push_back(reference_v);
 	}
+	printf("-------- reference trajectory-------- \n");
 	for (int i = 0; i < N; i++)
 	{
 		printf("i: %d, x: %.2f, y: %.2f, v: %.2f, yaw: %.2f\n", i, ref_x[i], ref_y[i], ref_v[i], ref_yaw[i]);
 	}
 	return {ref_x, ref_y, ref_v, ref_yaw};
+}
+
+vector<vector<double>> motion_prediction(const vector<double> &cur_states, const vector<vector<double>> &prev_u)
+{
+	vector<double> old_acceleration_cmd = prev_u[0];
+	vector<double> old_steering_cmd = prev_u[1];
+	vector<vector<double>> predicted_states;
+	predicted_states.push_back(cur_states);
+	// for (int i = 0; i < N ; i++)
+	// {
+	// 	printf("i: %d, old_acceleration_cmd: %lf \n", i, old_acceleration_cmd[i]);
+	// 	printf("i: %d, old_steering_cmd: %lf \n", i, old_steering_cmd[i]);
+	// }
+	for (int i = 0; i < N; i++)
+	{
+		vector<double> cur_state = predicted_states[i];
+		// yaw angle compensation of overflow
+		if (cur_state[3] > M_PI)
+		{
+			cur_state[3] -= 2 * M_PI;
+		}
+		if (cur_state[3] < -M_PI)
+		{
+			cur_state[3] += 2. * M_PI;
+		}
+		vector<double> next_state = update_states(cur_state, old_acceleration_cmd[i], old_steering_cmd[i]);
+		predicted_states.push_back(next_state);
+	}
+	printf("-------- motion prediction -------- \n");
+	for (int i = 0; i < N + 1; i++)
+	{
+		printf("i: %d, x: %lf, y: %lf, v: %lf, yaw: %lf\n", i, predicted_states[i][0], predicted_states[i][1], predicted_states[i][2], predicted_states[i][3]);
+	}
+	return predicted_states;
+}
+
+vector<double> update_states(vector<double> state, double acceleration_cmd, double steering_cmd)
+{
+	// based on kinematic model
+	double x0 = state[0];
+	double y0 = state[1];
+	double v0 = state[2];
+	double yaw0 = state[3];
+
+	double x1 = x0 + v0 * cos(yaw0) * Ts;
+	double y1 = y0 + v0 * sin(yaw0) * Ts;
+	double v1 = v0 + acceleration_cmd * Ts;
+	double yaw1 = yaw0 + v0 / Lf * steering_cmd * Ts;
+	return {x1, y1, v1, yaw1};
 }
