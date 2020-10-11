@@ -94,7 +94,6 @@ vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_s
 			acadoVariables.u[u_cnt] = (real_t) previous_u[j][i];
 			u_cnt++;
 		}
-		printf("\n");
 	}
 	// for (i = 0; i < NU * N; ++i)  acadoVariables.u[ i ] = 0.0;
 	// acado_printControlVariables();
@@ -159,8 +158,6 @@ vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_s
 	vector<double> control_output_acceleration;
 	vector<double> control_output_steering;
 	real_t *u = acado_getVariablesU();
-	printf("u: %lf \n", u[0]);
-
 	for (int i = 0; i < ACADO_N; ++i)
 	{
 		for (int j = 0; j < ACADO_NU; ++j)

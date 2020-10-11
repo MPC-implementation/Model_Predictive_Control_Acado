@@ -169,11 +169,11 @@ int main()
             control_output = init_acado();
             flg_init = true;
           }
-          printf("-------  previous_control_output ------- \n");
-          for (int i = 0; i < control_output[0].size(); i++)
-          {
-            std::cout<< i <<" acceleration: "<< control_output[0][i] <<" steering: " <<control_output[1][i] <<endl;
-          }
+          // printf("-------  previous_control_output ------- \n");
+          // for (int i = 0; i < control_output[0].size(); i++)
+          // {
+          //   std::cout<< i <<" acceleration: "<< control_output[0][i] <<" steering: " <<control_output[1][i] <<endl;
+          // }
           vector<double> predicted_states = motion_prediction(cur_state, control_output);
           vector<double> ref_states = calculate_ref_states(coeffs, ref_v);
           control_output = run_mpc_acado(predicted_states, ref_states, control_output);
