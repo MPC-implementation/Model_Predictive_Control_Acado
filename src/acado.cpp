@@ -71,7 +71,7 @@ vector<vector<double>> init_acado()
 	}
 	return {control_output_acceleration, control_output_steering};
 }
-vector<vector<double>> run_mpc_acado(vector<vector<double>> states, vector<vector<double>> ref_states, vector<vector<double>> previous_u)
+vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_states, vector<vector<double>> previous_u)
 {
 	/* Some temporary variables. */
 	int i, iter;
@@ -81,45 +81,35 @@ vector<vector<double>> run_mpc_acado(vector<vector<double>> states, vector<vecto
 	// acado_shiftStates(2, 0, 0);
 	// acado_shiftControls(0);
 
-	int x_cnt = 0;
-	for (int i = 0; i < ACADO_N + 1; ++i)
+	for (i = 0; i < NX * (N + 1); ++i)  
 	{
-		for (int j = 0; j < ACADO_NX; ++j)
-		{
-			acadoVariables.x[x_cnt] = states[j][i];
-		}
+		acadoVariables.x[ i ] = (real_t) states[i];
 	}
-	for (i = 0; i < NX; ++i)
-	{
-		acadoVariables.x0[i] = states[i][0];
-	}
+	
 	int u_cnt = 0;
 	for (int i = 0; i < ACADO_N; ++i)
 	{
 		for (int j = 0; j < ACADO_NU; ++j)
 		{
-			acadoVariables.u[u_cnt] = previous_u[j][i];
+			acadoVariables.u[u_cnt] = (real_t) previous_u[j][i];
+			printf("i: %d, acado u: %lf \n", i, acadoVariables.u[u_cnt]);
 			u_cnt++;
 		}
 	}
 
 	/* Initialize the measurements/reference. */
-	int y_cnt = 0;
-	for (int i = 0; i < ACADO_N; ++i)
+	for (i = 0; i < NY * N; ++i)  
 	{
-		for (int j = 0; j < NY; ++j)
-		{
-			acadoVariables.y[y_cnt] = ref_states[j][i]; 
-			y_cnt++;
-		}
+		acadoVariables.y[ i ] = (real_t) ref_states[i];
+	}
+	for (i = 0; i < NYN; ++i) 	
+	{
+		acadoVariables.yN[i] = (real_t) ref_states[NY * (N-1) + i];
 	}
 
-	for (i = 0; i < NYN; ++i)
-	{
-		acadoVariables.yN[i] = ref_states[i][NYN-1];
-	}
-		
 
+	acado_printDifferentialVariables();
+	acado_printControlVariables();
 	/* MPC: initialize the current state feedback. */
 	// #if ACADO_INITIAL_STATE_FIXED
 	// 	for (i = 0; i < NX; ++i)
@@ -130,7 +120,7 @@ vector<vector<double>> run_mpc_acado(vector<vector<double>> states, vector<vecto
 		acado_printHeader();
 
 	// /* Prepare first step */
-	// acado_preparationStep();
+	acado_preparationStep();
 
 	/* Get the time before start of the loop. */
 	acado_tic(&t);
@@ -139,7 +129,7 @@ vector<vector<double>> run_mpc_acado(vector<vector<double>> states, vector<vecto
 
 	/* Perform the feedback step. */
 	acado_feedbackStep();
-	acado_preparationStep();
+	// acado_preparationStep();
 
 	/* Apply the new control immediately to the process, first NU components. */
 
@@ -166,6 +156,8 @@ vector<vector<double>> run_mpc_acado(vector<vector<double>> states, vector<vecto
 
 	vector<double> control_output_acceleration;
 	vector<double> control_output_steering;
+	real_t *u = acado_getVariablesU();
+
 	for (int i = 0; i < ACADO_N; ++i)
 	{
 		for (int j = 0; j < ACADO_NU; ++j)
@@ -183,7 +175,7 @@ vector<vector<double>> run_mpc_acado(vector<vector<double>> states, vector<vecto
 	return {control_output_acceleration, control_output_steering};
 }
 
-vector<vector<double>> calculate_ref_states(const Eigen::VectorXd &coeff, const double &reference_v)
+vector<double> calculate_ref_states(const Eigen::VectorXd &coeff, const double &reference_v)
 {
 	vector<double> ref_x;
 	vector<double> ref_y;
@@ -211,15 +203,18 @@ vector<vector<double>> calculate_ref_states(const Eigen::VectorXd &coeff, const 
 		ref_yaw.push_back(next_yaw);
 		ref_v.push_back(reference_v);
 	}
-	printf("-------- reference trajectory-------- \n");
-	for (int i = 0; i < N; i++)
+	vector<vector<double>> ref_states = {ref_x, ref_y, ref_v, ref_yaw};
+	vector<double> result;
+	for (int i = 0; i < ACADO_N; ++i)
 	{
-		printf("i: %d, x: %.2f, y: %.2f, v: %.2f, yaw: %.2f\n", i, ref_x[i], ref_y[i], ref_v[i], ref_yaw[i]);
+		for (int j = 0; j < NY; ++j)
+		{
+			result.push_back(ref_states[j][i]);
+		}
 	}
-	return {ref_x, ref_y, ref_v, ref_yaw};
+	return result;
 }
-
-vector<vector<double>> motion_prediction(const vector<double> &cur_states, const vector<vector<double>> &prev_u)
+vector<double> motion_prediction(const vector<double> &cur_states, const vector<vector<double>> &prev_u)
 {
 	vector<double> old_acceleration_cmd = prev_u[0];
 	vector<double> old_steering_cmd = prev_u[1];
@@ -245,12 +240,20 @@ vector<vector<double>> motion_prediction(const vector<double> &cur_states, const
 		vector<double> next_state = update_states(cur_state, old_acceleration_cmd[i], old_steering_cmd[i]);
 		predicted_states.push_back(next_state);
 	}
-	printf("-------- motion prediction -------- \n");
-	for (int i = 0; i < N + 1; i++)
+	// printf("-------- motion prediction -------- \n");
+	// for (int i = 0; i < N + 1; i++)
+	// {
+	// 	printf("i: %d, x: %lf, y: %lf, v: %lf, yaw: %lf\n", i, predicted_states[i][0], predicted_states[i][1], predicted_states[i][2], predicted_states[i][3]);
+	// }
+	vector<double> result;
+	for (int i = 0; i < (ACADO_N + 1); ++i)
 	{
-		printf("i: %d, x: %lf, y: %lf, v: %lf, yaw: %lf\n", i, predicted_states[i][0], predicted_states[i][1], predicted_states[i][2], predicted_states[i][3]);
+		for (int j = 0; j < NY; ++j)
+		{
+			result.push_back(predicted_states[i][j]);
+		}
 	}
-	return predicted_states;
+	return result;
 }
 
 vector<double> update_states(vector<double> state, double acceleration_cmd, double steering_cmd)
