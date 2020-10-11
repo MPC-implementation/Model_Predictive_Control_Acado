@@ -92,10 +92,12 @@ vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_s
 		for (int j = 0; j < ACADO_NU; ++j)
 		{
 			acadoVariables.u[u_cnt] = (real_t) previous_u[j][i];
-			printf("i: %d, acado u: %lf \n", i, acadoVariables.u[u_cnt]);
 			u_cnt++;
 		}
+		printf("\n");
 	}
+	// for (i = 0; i < NU * N; ++i)  acadoVariables.u[ i ] = 0.0;
+	// acado_printControlVariables();
 
 	/* Initialize the measurements/reference. */
 	for (i = 0; i < NY * N; ++i)  
@@ -108,8 +110,8 @@ vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_s
 	}
 
 
-	acado_printDifferentialVariables();
-	acado_printControlVariables();
+	// acado_printDifferentialVariables();
+	// acado_printControlVariables();
 	/* MPC: initialize the current state feedback. */
 	// #if ACADO_INITIAL_STATE_FIXED
 	// 	for (i = 0; i < NX; ++i)
@@ -157,6 +159,7 @@ vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_s
 	vector<double> control_output_acceleration;
 	vector<double> control_output_steering;
 	real_t *u = acado_getVariablesU();
+	printf("u: %lf \n", u[0]);
 
 	for (int i = 0; i < ACADO_N; ++i)
 	{
@@ -164,11 +167,11 @@ vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_s
 		{
 			if (j == 0)
 			{
-				control_output_acceleration.push_back(acadoVariables.u[i * ACADO_NU + j]);
+				control_output_acceleration.push_back((double) u[i * ACADO_NU + j]);
 			}
 			else // only two output. therefore i == 1 means steering command output
 			{
-				control_output_steering.push_back(acadoVariables.u[i * ACADO_NU + j]);
+				control_output_steering.push_back((double)u[i * ACADO_NU + j]);
 			}
 		}
 	}
