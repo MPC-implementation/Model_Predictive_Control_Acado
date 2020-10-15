@@ -20,7 +20,7 @@ using namespace std;
 #define N ACADO_N /* Number of intervals in the horizon. */
 
 #define NUM_STEPS 10 /* Number of real-time iterations. */
-#define VERBOSE 0		 /* Show iterations: 1, silent: 0.  */
+#define VERBOSE 1		 /* Show iterations: 1, silent: 0.  */
 vector<vector<double>> init_acado();
 vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_states, vector<vector<double>> previous_u);
 vector<double> motion_prediction(const vector<double> &cur_states, const vector<vector<double>> &prev_u);

@@ -35,6 +35,31 @@ ACADOvariables acadoVariables;
 ACADOworkspace acadoWorkspace;
 using namespace std;
 /* A template for testing of the solver. */
+void init_weight()
+{
+	double w_x = 10;
+	double w_y = 200;
+	double w_vel = 10;
+	double w_yaw = 100000;
+	for (int i = 0; i < N; i++)
+	{
+		// Setup diagonal entries
+		acadoVariables.W[NY * NY * i + (NY + 1) * 0] = w_x;
+		acadoVariables.W[NY * NY * i + (NY + 1) * 1] = w_y;
+		acadoVariables.W[NY * NY * i + (NY + 1) * 2] = w_vel;
+		acadoVariables.W[NY * NY * i + (NY + 1) * 3] = w_yaw;
+	}
+	acadoVariables.WN[(NYN + 1) * 0] = w_x;
+	acadoVariables.WN[(NYN + 1) * 1] = w_y;
+	acadoVariables.WN[(NYN + 1) * 2] = w_vel;
+	acadoVariables.WN[(NYN + 1) * 3] = w_yaw;
+
+	for (int i = 0; i < N * NY; i++)
+	{
+		acadoVariables.W[i] = 1;
+	}
+}
+
 vector<vector<double>> init_acado()
 {
 	/* Initialize the solver. */
@@ -69,6 +94,7 @@ vector<vector<double>> init_acado()
 			}
 		}
 	}
+	init_weight();
 	return {control_output_acceleration, control_output_steering};
 }
 vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_states, vector<vector<double>> previous_u)
@@ -77,40 +103,25 @@ vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_s
 	int i, iter;
 	acado_timer t;
 
-	//previou
-	// acado_shiftStates(2, 0, 0);
-	// acado_shiftControls(0);
-
 	for (i = 0; i < NX * (N + 1); ++i)  
 	{
 		acadoVariables.x[ i ] = (real_t) states[i];
 	}
-	
-	int u_cnt = 0;
-	for (int i = 0; i < ACADO_N; ++i)
+	for (i = 0; i < NX; ++i)
 	{
-		for (int j = 0; j < ACADO_NU; ++j)
-		{
-			acadoVariables.u[u_cnt] = (real_t) previous_u[j][i];
-			u_cnt++;
-		}
+		acadoVariables.x0[i] = (real_t)states[i];
 	}
-	// for (i = 0; i < NU * N; ++i)  acadoVariables.u[ i ] = 0.0;
-	// acado_printControlVariables();
 
 	/* Initialize the measurements/reference. */
-	for (i = 0; i < NY * N; ++i)  
+	for (i = 0; i < NY * N; ++i)
 	{
-		acadoVariables.y[ i ] = (real_t) ref_states[i];
+		acadoVariables.y[i] = (real_t)ref_states[i];
 	}
-	for (i = 0; i < NYN; ++i) 	
+	for (i = 0; i < NYN; ++i)
 	{
-		acadoVariables.yN[i] = (real_t) ref_states[NY * (N-1) + i];
+		acadoVariables.yN[i] = (real_t)ref_states[NY * (N - 1) + i];
 	}
 
-
-	// acado_printDifferentialVariables();
-	// acado_printControlVariables();
 	/* MPC: initialize the current state feedback. */
 	// #if ACADO_INITIAL_STATE_FIXED
 	// 	for (i = 0; i < NX; ++i)
@@ -152,8 +163,8 @@ vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_s
 	if (!VERBOSE)
 		printf("\n\n Average time of one real-time iteration:   %.3g microseconds\n\n", 1e6 * te / NUM_STEPS);
 
-	acado_printDifferentialVariables();
-	acado_printControlVariables();
+	// acado_printDifferentialVariables();
+	// acado_printControlVariables();
 
 	vector<double> control_output_acceleration;
 	vector<double> control_output_steering;
@@ -164,11 +175,13 @@ vector<vector<double>> run_mpc_acado(vector<double> states, vector<double> ref_s
 		{
 			if (j == 0)
 			{
-				control_output_acceleration.push_back((double) u[i * ACADO_NU + j]);
+				control_output_acceleration.push_back((double)u[i * ACADO_NU + j]);
+				// printf("accel cmd: %lf, \n", (double)u[i * ACADO_NU + j]);
 			}
 			else // only two output. therefore i == 1 means steering command output
 			{
 				control_output_steering.push_back((double)u[i * ACADO_NU + j]);
+				printf("steering cmd: %lf, \n", (double)u[i * ACADO_NU + j]);
 			}
 		}
 	}

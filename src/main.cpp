@@ -162,7 +162,7 @@ int main()
           // acado setting
           vector<double> cur_state = {0, 0, v * MPH2MS, 0}; // because current pos is in local coordinate, x = y = psi = 0
           
-          double ref_v = 5; // m/s
+          double ref_v = 20; // m/s
           if (flg_init == false)
           {
             printf("-------  initialized the acado ------- \n");
@@ -183,8 +183,8 @@ int main()
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
           //msgJson["steering_angle"] = steer_value / steer_normalizer * -1.0;
           // printf("steer value: %lf,   normalized value: %lf \n", steer_value, steer_value / deg2rad(25) * -1.0);
-          msgJson["steering_angle"] = steer_value / deg2rad(25) * -1.0;
-          msgJson["throttle"] = throttle_value;
+          msgJson["steering_angle"] = - control_output[1][0]; // steer_value / deg2rad(25) * -1.0;
+          msgJson["throttle"] = control_output[0][0];// throttle_value;
 
           // Display the MPC predicted trajectory
           vector<double> mpc_x_vals;
