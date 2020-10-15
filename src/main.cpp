@@ -87,6 +87,7 @@ int main()
   uWS::Hub h;
 
   // MPC is initialized here!
+  init_acado();
   MPC mpc;
   Log logSteering("../logging/LoggingSteering.json");
 
@@ -158,14 +159,26 @@ int main()
           state << 0, 0, 0, v, cte, epsi;
 
           auto vars = mpc.Solve(state, coeffs);
-          steer_value = vars[0];
-          throttle_value = vars[1];
+
+	  std::vector<double> s = {0.0, 0.0, v, 0.0};
+	  // create_reference(v, coeffs, ref);
+	  ctrl c;
+          run_mpc_acado(s, coeffs, c);
+	  for(int i=0; i<=N; i++){
+		  std::cout<<i<<" "<<c.a[i]<<" "<<c.delta[i]<<std::endl;
+	  }
+
+          // steer_value = vars[0];
+          // throttle_value = vars[1];
+	  steer_value = c.delta[0];
+	  throttle_value = c.a[0];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
           //msgJson["steering_angle"] = steer_value / steer_normalizer * -1.0;
-          msgJson["steering_angle"] = steer_value / deg2rad(25) * -1.0;
+	  // msgJson["steering_angle"] = steer_value / deg2rad(25) * -1.0;
+          msgJson["steering_angle"] = steer_value * -1.0;
           msgJson["throttle"] = throttle_value;
 
           // Display the MPC predicted trajectory
@@ -183,8 +196,6 @@ int main()
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
-          // run_mpc_acado();
-
           // Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
