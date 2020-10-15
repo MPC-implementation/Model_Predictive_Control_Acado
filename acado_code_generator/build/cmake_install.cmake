@@ -1,4 +1,4 @@
-# Install script for directory: /home/khyeon/workspace/024_VehDynamics/acado_code_generator
+# Install script for directory: /media/jmarple/DATA/cpp_ws/mpc_sim/acado_code_generator
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/khyeon/workspace/024_VehDynamics/acado_code_generator/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/media/jmarple/DATA/cpp_ws/mpc_sim/acado_code_generator/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -1,5 +1,7 @@
 #include "acado.h"
-
+#include <iostream>
+#include <limits>
+#include <unsupported/Eigen/Polynomials>
 /*
  *    This file was auto-generated using the ACADO Toolkit.
  *    
@@ -34,6 +36,21 @@ www.acadotoolkit.org
 ACADOvariables acadoVariables;
 ACADOworkspace acadoWorkspace;
 using namespace std;
+void init_weight() {
+double w_cte = 0.001;
+double w_angle = 0.0;
+double w_velo = 0.2;
+for (int i = 0; i < N; i++) {
+    // Setup diagonal entries
+    acadoVariables.W[NY*NY*i + (NY+1)*0] = w_cte;
+    acadoVariables.W[NY*NY*i + (NY+1)*1] = w_angle;
+    acadoVariables.W[NY*NY*i + (NY+1)*2] = w_velo;
+}
+  acadoVariables.WN[(NYN+1)*0] = w_cte;
+  acadoVariables.WN[(NYN+1)*1] = w_angle;
+  acadoVariables.WN[(NYN+1)*2] = w_velo;
+
+}
 /* A template for testing of the solver. */
 void init_acado()
 {
@@ -49,16 +66,17 @@ void init_acado()
 	// 	acadoVariables.y[i] = 0.0;
 	// for (i = 0; i < NYN; ++i)
 	// 	acadoVariables.yN[i] = 0.0;
+	init_weight();
 }
-void run_mpc_acado(std::vector<double> states, std::vector<double> path)
+void run_mpc_acado(const std::vector<double>& states, 
+		const Eigen::Matrix<double, -1, 1>& coeff,
+		ctrl& c)
 {
 	/* Some temporary variables. */
 	int i, iter;
 	acado_timer t;
 
-	//previou
 	acado_shiftStates(1, 0, 0);
-	//
 	acado_shiftControls(0);
 
 	for (i = 0; i < NX; ++i)
@@ -67,36 +85,23 @@ void run_mpc_acado(std::vector<double> states, std::vector<double> path)
 		acadoVariables.x0[i] = states[i];
 	}
 
-	for (i = 0; i < NU; ++i)
-		acadoVariables.u[i] = 0; // previous u
-
-	/* Initialize the measurements/reference. */
-	for (i = 0; i < NY * N; ++i)
-		acadoVariables.y[i] = 0.0;
-	for (i = 0; i < NYN; ++i)
-		acadoVariables.yN[i] = 0.0;
-
-	/* MPC: initialize the current state feedback. */
-	// #if ACADO_INITIAL_STATE_FIXED
-	// 	for (i = 0; i < NX; ++i)
-	// 		acadoVariables.x0[i] = 0.1;
-	// #endif
-
-	if (VERBOSE)
-		acado_printHeader();
-
-	/* Prepare first step */
-	acado_preparationStep();
+	// Feed coeff
+	for (int i=0; i<=NOD * N; i += NOD){
+		acadoVariables.od[i] = coeff[0];
+		acadoVariables.od[i+1] = coeff[1];
+		acadoVariables.od[i+2] = coeff[2];
+		acadoVariables.od[i+3] = coeff[3];
+	}
 
 	/* Get the time before start of the loop. */
 	acado_tic(&t);
 
-	/* The "real-time iterations" loop. */
+	
+	/* Prepare first step */
+	acado_preparationStep();
 
 	/* Perform the feedback step. */
 	acado_feedbackStep();
-
-	/* Apply the new control immediately to the process, first NU components. */
 
 	if (VERBOSE)
 		printf("\tReal-Time Iteration %d:  KKT Tolerance = %.3e\n\n", iter, acado_getKKT());
@@ -115,7 +120,54 @@ void run_mpc_acado(std::vector<double> states, std::vector<double> path)
 
 	if (!VERBOSE)
 		printf("\n\n Average time of one real-time iteration:   %.3g microseconds\n\n", 1e6 * te / NUM_STEPS);
+	std::cout<<"cost: "<<acado_getObjective()<<std::endl;
 
 	acado_printDifferentialVariables();
 	acado_printControlVariables();
+
+	for (i=0; i <=N; i++) {
+		c.a[i] = acadoVariables.u[2*i];
+		c.delta[i] = acadoVariables.u[2*i+1];
+	}
 }
+
+void create_reference(
+		const double& velocity,
+		const Eigen::Matrix<double, -1, 1>& coeff,
+		std::vector<std::vector<double>>& ref) {
+// state: x, y, v, psi
+
+    static const double dt = 0.1;
+    double velo = std::max(velocity, 1.0);
+
+    double prev_d = 0.0;
+    for(int i=1; i<N; ++i) {
+	double d = i * dt * velo;
+
+	// https://eigen.tuxfamily.org/dox/unsupported/classEigen_1_1PolynomialSolver.html#details
+	Eigen::Matrix<double, 5, 1> poly;
+	poly << -d, coeff[0], coeff[1]/2.0, coeff[2]/3.0, coeff[3]/4.0;
+	Eigen::PolynomialSolver<double, 4> solver(poly);
+	std::vector<double> roots;
+	solver.realRoots(roots);
+	// find positive min
+	double ans_x = std::numeric_limits<double>::max();
+	for(auto &i : roots) if(i>=0.01) ans_x = std::min(ans_x, i);
+
+	double x = ans_x;
+	double y = coeff[0] + coeff[1] * x + coeff[2] * pow(x,2) + coeff[3] * pow(x,3);
+	double psi = atan(coeff[1] + 2.0 * coeff[2] * x + 3.0 * coeff[3] * pow(x, 2));
+
+	ref[i] = std::vector<double>{x, y, velo, psi};
+	std::cout<<"? "<<d<<" "<<x<<" "<<y<<" "<<velo<<" "<<psi<<std::endl;
+    }
+}
+
+void get_control(std::vector<std::vector<double>>& ctrl) {
+	for(int i=0; i<N; i++) {
+		for (int j=0; j<NU; j++){
+			ctrl[i][j] = acadoVariables.u[i*NU+j];
+		}
+	}
+}
+
