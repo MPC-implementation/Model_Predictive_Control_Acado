@@ -6,11 +6,9 @@
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
-#include "MPC.h"
 #include "json.hpp"
 #include <cstdio>
 #include <fstream>
-#include "logging.h"
 #include "acado.h"
 // for convenience
 using json = nlohmann::json;
@@ -87,9 +85,7 @@ int main()
   uWS::Hub h;
   vector<vector<double>> control_output;
   // MPC is initialized here!
-  MPC mpc;
-  Log logSteering("../logging/LoggingSteering.json");
-  h.onMessage([&mpc, &control_output, &logSteering](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&control_output](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
 
     // "42" at the start of the message means there's a websocket message event.
@@ -143,22 +139,6 @@ int main()
           // add the 3rd order polynomial to the coeffecients
           auto coeffs = polyfit(xvals, yvals, 3);
 
-          // Model steering and throttle using MPC
-          double steer_value;
-          double throttle_value;
-          double cte;
-          double epsi;
-
-          cte = coeffs[0];
-          epsi = -atan(coeffs[1]);
-
-          Eigen::VectorXd state(6);
-          state << 0, 0, 0, v, cte, epsi;
-
-          auto vars = mpc.Solve(state, coeffs);
-          steer_value = vars[0];
-          throttle_value = vars[1];
-
           // acado setting
           vector<double> cur_state = {0, 0, v * MPH2MS, 0}; // because current pos is in local coordinate, x = y = psi = 0
           
@@ -192,11 +172,16 @@ int main()
 
           // .. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
-
-          for (int i = 2; i < vars.size(); i = i + 2)
+          for (int i = 0; i< predicted_states.size(); i++)
           {
-            mpc_x_vals.push_back(vars[i]);
-            mpc_y_vals.push_back(vars[i + 1]);
+            if (i % NY == 0)
+            {
+              mpc_x_vals.push_back(predicted_states[i]);
+            }
+            else if (i % NY == 1)
+            {
+              mpc_y_vals.push_back(predicted_states[i]);
+            }
           }
 
           msgJson["mpc_x"] = mpc_x_vals;
@@ -220,10 +205,6 @@ int main()
           msgJson["next_y"] = next_y_vals;
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          ///////////////////////////////////////////////////////////////////////////
-          // logging msg
-          float steering = {steer_value / deg2rad(25) * -1.0};
-          logSteering.StartLogging(steering);
           // std::cout << msg << std::endl;
           ///////////////////////////////////////////////////////////////////////////
 
