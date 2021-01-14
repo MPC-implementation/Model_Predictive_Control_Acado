@@ -1,49 +1,74 @@
-# Model predictive control
-Model predictive control project for longitudinal and lateral control of the autonomous vehicles. It uses udacity vehicle simulator. [self driving car engineer course](https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013) 
-- - -
-### Getting started
-These instructions will help running this project on your local machine.
+# Model predictive control for the autonomous vehicle based on the ACADO library
+Model predictive control project for longitudinal and lateral control of the autonomous vehicles. It uses [ACADO](https://acado.github.io/) library. The simulator is from the udacity, [self driving car engineer course](https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013) 
 
-#### Prerequisites
-##### 1. Basic environment
-Please install all the dependencies first by using this  [repository](https://github.com/udacity/CarND-MPC-Project) which is for self-driving car engineer course of udacity.
-```
-cmake >= 3.5
--std=c++11
-ipopt
-CppAD
-```
-##### 2. Udacity vehicle simulator
-1. Install git-lfs
-git-lfs is github platform for large file handling. You can easily install it on the official github [site](https://git-lfs.github.com/) 
+## Result
 
-2. Install Unity
-Udacity simulator is made by unity. To run the simulator, Unity is necessary.
-```
-1. sudo apt install gdebi
-2. wget http://beta.unity3d.com/download/ee86734cf592/unity-editor_amd64-2017.2.0f3.deb
-3. sudo gdebi unity-editor_amd64-2017.2.0f3.deb
-```
+![](media/result.gif)
 
-- - -
-### Running the project
-On terminal
-```
+## Features
+
+* This repository uses the ACADO library for MPC solver
+
+## Dependencies
+
+- cmake >= 3.5
+- All OSes: [click here for installation instructions](https://cmake.org/install/)
+- make >= 4.1(mac, linux), 3.81(Windows)
+  - Linux: make is installed by default on most Linux distros
+  - Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
+  - Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
+- gcc/g++ >= 5.4
+  - Linux: gcc / g++ is installed by default on most Linux distros
+  - Mac: same deal as make - [install Xcode command line tools]((https://developer.apple.com/xcode/features/)
+  - Windows: recommend using [MinGW](http://www.mingw.org/)
+- git-lfs
+
+## Installation
+
+- [uWebSockets](https://github.com/uWebSockets/uWebSockets)
+  - Run either `install-mac.sh` or `install-ubuntu.sh`.
+- [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page). This is already part of the repo so you shouldn't have to worry about it.
+- Simulator. You can download these from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
+- Not a dependency but read the [DATA.md](https://github.com/udacity/CarND-MPC-Project/blob/master/DATA.md) for a description of the data sent back from the simulator
+- ACADO environment set-up
+  - Install ACADO tool-kit follow this [link](https://acado.github.io/install_linux.html)
+  - Please follow this [link](https://sourceforge.net/p/acado/wiki/Using%20CMake%20-%20UNIX%20-%20Common/) in order to build ACADO based executables outside ACADO source tree
+
+## Compiling and Running
+
+```shell
+# 1. Code generation 
+cd acado_code_generator
 mkdir build && cd build
-cmake .. && make
+cmake ..
+make
 ./mpc
+
+# 2. Build ACADO static library
+mv simple_mpc_export/* ../../acado_mpc_export/
+cd ../../acado_mpc_export
+make
+
+# 3. Build project
+cd ../
+mkdir build && cd build
+cmake ..
+make
+
+# 4. Run
+./mpc
+
+# 5. Open the simulator
+Open new terminal
+cd term2_sim_linux
+./term2_sim.x86_64
+click the project 5: MPC Controller
 ```
-Open the simulator
-```
-1. Open term2_sim_linux/term2_sim.x86_64
-2. Select graphic quality
-3. Select Project 5: MPC Controller
-```
+
 ![](Pictures/UdacitySim.png)
 
 
-### Result
-![](media/ProjectResult.gif)
-- - -
-### Additional features
-To analyze the performance of the controller more precisely, I added the logging class for data logging. If logging signal is needed, it can be logged by .json format. For example, logSteering class instance shows how to log the signal as .json (You can find it main.cpp).
+
+
+
+

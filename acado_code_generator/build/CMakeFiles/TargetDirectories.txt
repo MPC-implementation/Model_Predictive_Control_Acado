@@ -1,3 +1,0 @@
-/home/khyeon/workspace/024_VehDynamics/acado_code_generator/build/CMakeFiles/rebuild_cache.dir
-/home/khyeon/workspace/024_VehDynamics/acado_code_generator/build/CMakeFiles/edit_cache.dir
-/home/khyeon/workspace/024_VehDynamics/acado_code_generator/build/CMakeFiles/mpc.dir

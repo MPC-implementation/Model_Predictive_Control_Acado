@@ -9,7 +9,7 @@ add_definitions(-std=c++11 -O3)
 set(CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
-set(sources src/MPC.cpp src/main.cpp src/logging.cpp src/acado.cpp)
+set(sources src/main.cpp src/acado.cpp)
 
 include_directories(/usr/local/include)
 link_directories(/usr/local/lib)
